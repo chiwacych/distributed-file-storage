@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Portal - Distributed File Storage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .user-info {
+            background: #f0f4ff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .user-role {
+            color: #667eea;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .btn-admin {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+        }
+
+        .btn-admin:hover {
+            background: #5568d3;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upload-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .file-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .file-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .file-description {
+            font-size: 13px;
+            color: #555;
+            font-style: italic;
+            margin: 8px 0;
+        }
+
+        .file-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-small:hover {
+            background: #5568d3;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-success {
+            background: #4caf50;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>📁 My Files</h1>
+                <p class="subtitle">Personal File Storage Portal</p>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-name" id="displayUserName">User</div>
+                    <div class="user-role">Standard User</div>
+                    <a href="/admin" class="btn-admin">Switch to Admin View</a>
+                </div>
+            </div>
+        </header>
+
+        <div id="alertContainer"></div>
+
+        <!-- User Statistics -->
+        <div class="stats-summary">
+            <div class="stat-box">
+                <div class="stat-value" id="userFileCount">0</div>
+                <div class="stat-label">My Files</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="userStorageUsed">0 MB</div>
+                <div class="stat-label">Storage Used</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="lastUploadTime">Never</div>
+                <div class="stat-label">Last Upload</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2>📤 Upload New File</h2>
+                <form id="uploadForm" class="upload-form">
+                    <div class="form-group">
+                        <label for="file">Select File</label>
+                        <input type="file" id="file" name="file" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userId">Your User ID</label>
+                        <input type="text" id="userId" name="userId" placeholder="Enter your user ID" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description (Optional)</label>
+                        <textarea id="description" name="description" placeholder="What is this file about?"></textarea>
+                    </div>
+                    <button type="submit" id="uploadBtn">
+                        <span id="uploadBtnText">Upload File</span>
+                        <span id="uploadSpinner" style="display: none;" class="loading"></span>
+                    </button>
+                    <div id="uploadProgress" class="progress-bar" style="display: none;">
+                        <div id="uploadProgressFill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- My Files Section -->
+            <div class="card">
+                <h2>📂 My Files</h2>
+                <div class="file-list" id="fileList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">No files yet</div>
+                        <div class="empty-state-subtext">Upload your first file above to get started!</div>
+                    </div>
+                </div>
+                <button onclick="loadUserFiles()" style="margin-top: 15px; width: 100%;">🔄 Refresh Files</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '';
+        let currentUserId = localStorage.getItem('userId') || '';
+
+        // Set user ID on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const userIdInput = document.getElementById('userId');
+            if (currentUserId) {
+                userIdInput.value = currentUserId;
+                document.getElementById('displayUserName').textContent = currentUserId;
+            }
+
+            // Load user files
+            loadUserFiles();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Load user's files
+        async function loadUserFiles() {
+            const userId = document.getElementById('userId').value.trim();
+            
+            if (!userId) {
+                document.getElementById('fileList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👤</div>
+                        <div class="empty-state-text">Please enter your User ID</div>
+                        <div class="empty-state-subtext">Enter your User ID above to view your files</div>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/files?user_id=${userId}`);
+                const data = await response.json();
+
+                const container = document.getElementById('fileList');
+                
+                if (!data.files || data.files.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">No files yet</div>
+                            <div class="empty-state-subtext">Upload your first file above to get started!</div>
+                        </div>
+                    `;
+                    updateUserStats(0, 0, null);
+                    return;
+                }
+
+                container.innerHTML = '';
+                let totalSize = 0;
+                let lastUpload = null;
+
+                for (const file of data.files) {
+                    totalSize += file.size;
+                    const uploadDate = new Date(file.upload_timestamp);
+                    if (!lastUpload || uploadDate > lastUpload) {
+                        lastUpload = uploadDate;
+                    }
+
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = 'file-item';
+                    
+                    const sizeKB = (file.size / 1024).toFixed(2);
+                    const uploadDateStr = uploadDate.toLocaleString();
+                    const icon = getFileIcon(file.content_type);
+
+                    fileDiv.innerHTML = `
+                        <div class="file-name">
+                            <span class="file-icon">${icon}</span>
+                            <span>${file.filename}</span>
+                        </div>
+                        ${file.description ? `<div class="file-description">"${file.description}"</div>` : ''}
+                        <div class="file-meta">
+                            <span><strong>Size:</strong> ${sizeKB} KB</span>
+                            <span><strong>Type:</strong> ${file.content_type || 'Unknown'}</span>
+                            <span><strong>Uploaded:</strong> ${uploadDateStr}</span>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn-small btn-success" onclick="downloadFile(${file.id})">⬇️ Download</button>
+                            <button class="btn-small btn-danger" onclick="deleteFile(${file.id}, '${file.filename}')">🗑️ Delete</button>
+                        </div>
+                    `;
+                    container.appendChild(fileDiv);
+                }
+
+                updateUserStats(data.files.length, totalSize, lastUpload);
+
+            } catch (error) {
+                showAlert('Failed to load files: ' + error.message, 'error');
+            }
+        }
+
+        // Update user statistics
+        function updateUserStats(fileCount, totalSize, lastUpload) {
+            document.getElementById('userFileCount').textContent = fileCount;
+            document.getElementById('userStorageUsed').textContent = (totalSize / (1024 * 1024)).toFixed(2) + ' MB';
+            
+            if (lastUpload) {
+                const now = new Date();
+                const diff = now - lastUpload;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+
+                if (days > 0) {
+                    document.getElementById('lastUploadTime').textContent = days + 'd ago';
+                } else if (hours > 0) {
+                    document.getElementById('lastUploadTime').textContent = hours + 'h ago';
+                } else if (minutes > 0) {
+                    document.getElementById('lastUploadTime').textContent = minutes + 'm ago';
+                } else {
+                    document.getElementById('lastUploadTime').textContent = 'Just now';
+                }
+            } else {
+                document.getElementById('lastUploadTime').textContent = 'Never';
+            }
+        }
+
+        // Get file icon based on content type
+        function getFileIcon(contentType) {
+            if (!contentType) return '📄';
+            if (contentType.startsWith('image/')) return '🖼️';
+            if (contentType.startsWith('video/')) return '🎥';
+            if (contentType.startsWith('audio/')) return '🎵';
+            if (contentType.includes('pdf')) return '📕';
+            if (contentType.includes('word') || contentType.includes('document')) return '📘';
+            if (contentType.includes('excel') || contentType.includes('spreadsheet')) return '📊';
+            if (contentType.includes('zip') || contentType.includes('compressed')) return '🗜️';
+            if (contentType.includes('text')) return '📝';
+            return '📄';
+        }
+
+        // Upload file
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('file');
+            const userId = document.getElementById('userId').value.trim();
+            const description = document.getElementById('description').value;
+
+            if (!userId) {
+                showAlert('Please enter your User ID', 'error');
+                return;
+            }
+
+            // Save user ID to localStorage
+            localStorage.setItem('userId', userId);
+            currentUserId = userId;
+            document.getElementById('displayUserName').textContent = userId;
+
+            formData.append('file', fileInput.files[0]);
+            formData.append('user_id', userId);
+            formData.append('description', description);
+
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadProgressFill = document.getElementById('uploadProgressFill');
+
+            try {
+                uploadBtn.disabled = true;
+                uploadBtnText.style.display = 'none';
+                uploadSpinner.style.display = 'inline-block';
+                uploadProgress.style.display = 'block';
+                uploadProgressFill.style.width = '50%';
+
+                const response = await fetch(`${API_BASE}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                uploadProgressFill.style.width = '100%';
+
+                if (response.ok) {
+                    showAlert(`✅ File "${data.filename}" uploaded successfully!`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('uploadForm').reset();
+                    document.getElementById('userId').value = userId; // Keep user ID
+                    
+                    // Reload files
+                    setTimeout(() => loadUserFiles(), 1000);
+                } else {
+                    showAlert('Upload failed: ' + data.detail, 'error');
+                }
+            } catch (error) {
+                showAlert('Upload error: ' + error.message, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtnText.style.display = 'inline';
+                uploadSpinner.style.display = 'none';
+                setTimeout(() => {
+                    uploadProgress.style.display = 'none';
+                    uploadProgressFill.style.width = '0%';
+                }, 1000);
+            }
+        });
+
+        // Download file
+        async function downloadFile(fileId) {
+            window.open(`${API_BASE}/api/files/${fileId}/download`, '_blank');
+            showAlert('📥 Download started...', 'info');
+        }
+
+        // Delete file
+        async function deleteFile(fileId, filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/files/${fileId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert(`✅ File "${filename}" deleted successfully`, 'success');
+                    loadUserFiles();
+                } else {
+                    showAlert('Delete failed: ' + data.detail, 'error');
+                }
+            } catch (error) {
+                showAlert('Delete error: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

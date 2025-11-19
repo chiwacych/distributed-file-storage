@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # MinIO Node 1
+  minio1:
+    image: minio/minio:latest
+    container_name: minio1
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio1-data:/data
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - dfs-network
+
+  # MinIO Node 2
+  minio2:
+    image: minio/minio:latest
+    container_name: minio2
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio2-data:/data
+    command: server /data --console-address ":9002"
+    ports:
+      - "9010:9000"
+      - "9002:9002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - dfs-network
+
+  # MinIO Node 3
+  minio3:
+    image: minio/minio:latest
+    container_name: minio3
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio3-data:/data
+    command: server /data --console-address ":9003"
+    ports:
+      - "9020:9000"
+      - "9003:9003"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - dfs-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-dfs
+    environment:
+      POSTGRES_USER: dfsuser
+      POSTGRES_PASSWORD: dfspassword
+      POSTGRES_DB: dfs_metadata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dfsuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dfs-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dfs-network
+
+  # FastAPI Application
+  fastapi:
+    build: ./app
+    container_name: fastapi-dfs
+    environment:
+      - DATABASE_URL=postgresql://dfsuser:dfspassword@postgres:5432/dfs_metadata
+      - REDIS_URL=redis://redis:6379
+      - MINIO1_ENDPOINT=minio1:9000
+      - MINIO2_ENDPOINT=minio2:9000
+      - MINIO3_ENDPOINT=minio3:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin123
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio1:
+        condition: service_healthy
+      minio2:
+        condition: service_healthy
+      minio3:
+        condition: service_healthy
+    volumes:
+      - ./app:/app
+    networks:
+      - dfs-network
+
+networks:
+  dfs-network:
+    driver: bridge
+
+volumes:
+  minio1-data:
+  minio2-data:
+  minio3-data:
+  postgres-data:
+  redis-data:
