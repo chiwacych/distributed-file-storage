@@ -16,6 +16,8 @@ class RedisCache:
     def set(self, key: str, value: Any, ttl: int = None) -> bool:
         """Set a value in cache with optional TTL"""
         try:
+            from metrics import record_cache_operation
+            
             if ttl is None:
                 ttl = self.default_ttl
             
@@ -24,6 +26,7 @@ class RedisCache:
                 value = json.dumps(value)
             
             self.client.setex(key, ttl, value)
+            record_cache_operation("set", self._get_cache_type(key))
             return True
         except Exception as e:
             print(f"Redis SET error: {str(e)}")
@@ -32,9 +35,16 @@ class RedisCache:
     def get(self, key: str) -> Optional[Any]:
         """Get a value from cache"""
         try:
+            from metrics import record_cache_operation
+            
             value = self.client.get(key)
+            cache_type = self._get_cache_type(key)
+            
             if value is None:
+                record_cache_operation("get", cache_type, hit=False)
                 return None
+            
+            record_cache_operation("get", cache_type, hit=True)
             
             # Try to parse as JSON, return as-is if it fails
             try:
@@ -48,7 +58,10 @@ class RedisCache:
     def delete(self, key: str) -> bool:
         """Delete a key from cache"""
         try:
+            from metrics import record_cache_operation
+            
             self.client.delete(key)
+            record_cache_operation("delete", self._get_cache_type(key))
             return True
         except Exception as e:
             print(f"Redis DELETE error: {str(e)}")
@@ -69,6 +82,17 @@ class RedisCache:
         except Exception as e:
             print(f"Redis INCREMENT error: {str(e)}")
             return None
+    
+    def _get_cache_type(self, key: str) -> str:
+        """Determine cache type from key pattern"""
+        if key.startswith("file:metadata:"):
+            return "metadata"
+        elif key.startswith("files:list:"):
+            return "filelist"
+        elif key.startswith("node:health:"):
+            return "nodehealth"
+        else:
+            return "other"
     
     def set_file_metadata(self, file_id: int, metadata: dict, ttl: int = None) -> bool:
         """Cache file metadata"""

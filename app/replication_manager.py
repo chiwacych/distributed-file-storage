@@ -372,6 +372,9 @@ class ReplicationManager:
         Returns:
             Detailed sync summary
         """
+        # Import metrics here to avoid circular imports
+        from metrics import record_replication_sync, replication_status, replication_queue_length
+        
         # Prevent concurrent sync operations
         if self.is_syncing:
             return {
@@ -381,6 +384,8 @@ class ReplicationManager:
         
         async with self._sync_lock:
             self.is_syncing = True
+            replication_status.set(1)  # Mark as syncing
+            sync_start_time = datetime.now()
             
             try:
                 # Query files
@@ -395,7 +400,12 @@ class ReplicationManager:
                 
                 files = query.all()
                 
+                # Update queue length metric
+                replication_queue_length.set(len(files))
+                
                 if not files:
+                    duration = (datetime.now() - sync_start_time).total_seconds()
+                    record_replication_sync("skipped", duration)
                     return {
                         "status": "success",
                         "message": "No files to sync",
@@ -413,14 +423,29 @@ class ReplicationManager:
                 # Sync in batches
                 summary = await self.sync_batch(files, db, batch_size=5, timeout_per_file=15.0)
                 
+                # Record metrics
+                duration = (datetime.now() - sync_start_time).total_seconds()
+                if summary['synced'] > 0:
+                    record_replication_sync("success", duration)
+                else:
+                    record_replication_sync("complete", duration)
+                
+                # Update queue length to pending files
+                replication_queue_length.set(summary['pending'])
+                
                 return {
                     "status": "success",
                     "message": f"Sync completed: {summary['synced']} files synced, {summary['complete']} already complete",
                     "summary": summary
                 }
                 
+            except Exception as e:
+                duration = (datetime.now() - sync_start_time).total_seconds()
+                record_replication_sync("failed", duration)
+                raise
             finally:
                 self.is_syncing = False
+                replication_status.set(0)  # Mark as idle
 
 
 # Global replication manager instance

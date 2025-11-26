@@ -11,12 +11,14 @@ import io
 import os
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from database import get_db, init_db, engine
 from models import FileMetadata, UploadLog, ReplicationStatus, NodeHealth
 from minio_client import minio_cluster
 from redis_client import redis_cache
 from replication_manager import replication_manager
+import metrics
 
 # Thread pool for running blocking operations (reduced, replication has its own)
 thread_pool = ThreadPoolExecutor(max_workers=4)
@@ -25,8 +27,12 @@ thread_pool = ThreadPoolExecutor(max_workers=4)
 app = FastAPI(
     title="Distributed File Storage System",
     description="A fault-tolerant distributed file storage system using MinIO, PostgreSQL, and Redis",
-    version="1.0.0"
+    version="1.1.0"
 )
+
+# Initialize Prometheus metrics
+Instrumentator().instrument(app).expose(app)
+metrics.initialize_system_info()
 
 # Mount static files directory
 os.makedirs("static", exist_ok=True)
@@ -143,6 +149,8 @@ async def upload_file(
     - Stores metadata in PostgreSQL
     - Invalidates cache
     """
+    upload_start_time = datetime.now()
+    
     try:
         # Read file content
         file_content = await file.read()
@@ -167,6 +175,11 @@ async def upload_file(
         
         # Count successful uploads
         successful_uploads = sum(1 for r in upload_results.values() if r["status"] == "success")
+        
+        # Record metrics
+        status = "success" if successful_uploads == 3 else "partial" if successful_uploads > 0 else "failed"
+        total_duration = (datetime.now() - upload_start_time).total_seconds()
+        metrics.record_file_upload(status, successful_uploads, total_duration, file_size)
         
         # Create file metadata record
         file_metadata = FileMetadata(
@@ -214,6 +227,10 @@ async def upload_file(
         # Invalidate file list cache
         redis_cache.invalidate_file_list()
         
+        # Update system metrics
+        metrics.total_files.set(db.query(FileMetadata).count())
+        metrics.total_storage_bytes.set(db.query(func.sum(FileMetadata.file_size)).scalar() or 0)
+        
         return {
             "status": "success",
             "message": f"File uploaded successfully to {successful_uploads}/3 nodes",
@@ -227,6 +244,8 @@ async def upload_file(
         
     except Exception as e:
         db.rollback()
+        # Record failed upload
+        metrics.file_uploads_total.labels(status="failed", nodes_count="0").inc()
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 
@@ -363,6 +382,9 @@ async def download_file(
     - Updates last accessed timestamp
     - Increments download counter in Redis
     """
+    download_start_time = datetime.now()
+    download_node = None
+    
     try:
         # Get file metadata
         file_meta = db.query(FileMetadata).filter(FileMetadata.id == file_id).first()
@@ -376,7 +398,17 @@ async def download_file(
             bucket_name="dfs-files"
         )
         
+        # Determine which node was used (check replication status)
+        if file_data:
+            replications = db.query(ReplicationStatus).filter(
+                ReplicationStatus.file_id == file_id,
+                ReplicationStatus.is_replicated == True
+            ).all()
+            download_node = replications[0].node_name if replications else "unknown"
+        
         if file_data is None:
+            # Record failed download
+            metrics.record_file_download("failed", "none", (datetime.now() - download_start_time).total_seconds())
             raise HTTPException(status_code=404, detail="File not found on any MinIO node")
         
         # Update last accessed timestamp
@@ -385,6 +417,10 @@ async def download_file(
         
         # Increment download counter in Redis
         redis_cache.increment_downloads(file_id)
+        
+        # Record successful download metrics
+        download_duration = (datetime.now() - download_start_time).total_seconds()
+        metrics.record_file_download("success", download_node, download_duration)
         
         # Return file as streaming response
         return StreamingResponse(
@@ -398,6 +434,9 @@ async def download_file(
     except HTTPException:
         raise
     except Exception as e:
+        # Record failed download
+        if download_node:
+            metrics.record_file_download("failed", download_node, (datetime.now() - download_start_time).total_seconds())
         raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 
