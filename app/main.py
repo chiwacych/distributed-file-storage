@@ -747,12 +747,12 @@ async def get_file_versions(file_id: int, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="File not found")
         
         # Get versions from MinIO
-        versions = minio_cluster.list_object_versions(file_record.object_name)
+        versions = minio_cluster.list_object_versions(file_record.object_key)
         
         return {
             "file_id": file_id,
             "filename": file_record.filename,
-            "object_name": file_record.object_name,
+            "object_key": file_record.object_key,
             "versions": versions,
             "total_versions": len(versions)
         }
@@ -777,7 +777,7 @@ async def download_file_version(
         
         # Get specific version from MinIO
         file_data = minio_cluster.get_object_version(
-            file_record.object_name,
+            file_record.object_key,
             version_id
         )
         
@@ -814,7 +814,7 @@ async def delete_file_version(
         
         # Delete version from all MinIO nodes
         results = minio_cluster.delete_object_version(
-            file_record.object_name,
+            file_record.object_key,
             version_id
         )
         
