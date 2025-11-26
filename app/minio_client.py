@@ -67,7 +67,7 @@ class MinIOCluster:
                 print(f"✗ Failed to connect to {node_info['name']}: {str(e)}")
     
     def ensure_bucket(self, bucket_name: str = "dfs-files"):
-        """Ensure bucket exists on all nodes"""
+        """Ensure bucket exists on all nodes with versioning enabled"""
         results = {}
         for node_id, node_info in self.nodes.items():
             try:
@@ -77,6 +77,12 @@ class MinIOCluster:
                     results[node_id] = f"Bucket '{bucket_name}' created"
                 else:
                     results[node_id] = f"Bucket '{bucket_name}' already exists"
+                
+                # Enable versioning on bucket
+                from minio.commonconfig import ENABLED
+                from minio.versioningconfig import VersioningConfig
+                client.set_bucket_versioning(bucket_name, VersioningConfig(ENABLED))
+                results[node_id] += " (versioning enabled)"
             except Exception as e:
                 results[node_id] = f"Error: {str(e)}"
         return results
@@ -363,7 +369,87 @@ class MinIOCluster:
         except Exception as e:
             print(f"Error generating presigned URL: {str(e)}")
             return None
+    
+    def list_object_versions(
+        self,
+        object_name: str,
+        bucket_name: str = "dfs-files",
+        node_id: str = "minio1"
+    ) -> List[Dict]:
+        """List all versions of an object"""
+        try:
+            client = self.nodes[node_id]["client"]
+            versions = []
+            
+            # Use list_objects with versions=True to get all versions
+            objects = client.list_objects(
+                bucket_name,
+                prefix=object_name,
+                recursive=False,
+                include_version=True
+            )
+            
+            for obj in objects:
+                if obj.object_name == object_name:
+                    versions.append({
+                        "version_id": obj.version_id,
+                        "is_latest": obj.is_latest,
+                        "last_modified": obj.last_modified,
+                        "size": obj.size,
+                        "etag": obj.etag
+                    })
+            
+            # Sort by last_modified descending (newest first)
+            versions.sort(key=lambda x: x["last_modified"], reverse=True)
+            return versions
+        except Exception as e:
+            print(f"Error listing object versions: {str(e)}")
+            return []
+    
+    def get_object_version(
+        self,
+        object_name: str,
+        version_id: str,
+        bucket_name: str = "dfs-files",
+        node_id: str = "minio1"
+    ) -> Optional[bytes]:
+        """Download a specific version of an object"""
+        try:
+            client = self.nodes[node_id]["client"]
+            response = client.get_object(
+                bucket_name,
+                object_name,
+                version_id=version_id
+            )
+            data = response.read()
+            response.close()
+            response.release_conn()
+            return data
+        except Exception as e:
+            print(f"Error getting object version: {str(e)}")
+            return None
+    
+    def delete_object_version(
+        self,
+        object_name: str,
+        version_id: str,
+        bucket_name: str = "dfs-files"
+    ) -> Dict[str, str]:
+        """Delete a specific version from all nodes"""
+        results = {}
+        for node_id, node_info in self.nodes.items():
+            try:
+                client = node_info["client"]
+                client.remove_object(
+                    bucket_name,
+                    object_name,
+                    version_id=version_id
+                )
+                results[node_id] = "Version deleted successfully"
+            except Exception as e:
+                results[node_id] = f"Error: {str(e)}"
+        return results
 
 
-# Global instance
+# Initialize global MinIO cluster
 minio_cluster = MinIOCluster()

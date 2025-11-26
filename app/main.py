@@ -26,8 +26,8 @@ thread_pool = ThreadPoolExecutor(max_workers=4)
 # Initialize FastAPI app
 app = FastAPI(
     title="Distributed File Storage System",
-    description="A fault-tolerant distributed file storage system using MinIO, PostgreSQL, and Redis",
-    version="1.1.0"
+    description="A fault-tolerant distributed file storage system using MinIO, PostgreSQL, and Redis with versioning support",
+    version="1.2.0"
 )
 
 # Initialize Prometheus metrics
@@ -735,6 +735,99 @@ async def sync_all_files(db: Session = Depends(get_db)):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+
+@app.get("/api/files/{file_id}/versions")
+async def get_file_versions(file_id: int, db: Session = Depends(get_db)):
+    """Get all versions of a file"""
+    try:
+        # Get file metadata
+        file_record = db.query(FileMetadata).filter(FileMetadata.id == file_id).first()
+        if not file_record:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Get versions from MinIO
+        versions = minio_cluster.list_object_versions(file_record.object_name)
+        
+        return {
+            "file_id": file_id,
+            "filename": file_record.filename,
+            "object_name": file_record.object_name,
+            "versions": versions,
+            "total_versions": len(versions)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving versions: {str(e)}")
+
+
+@app.get("/api/files/{file_id}/versions/{version_id}/download")
+async def download_file_version(
+    file_id: int,
+    version_id: str,
+    db: Session = Depends(get_db)
+):
+    """Download a specific version of a file"""
+    try:
+        # Get file metadata
+        file_record = db.query(FileMetadata).filter(FileMetadata.id == file_id).first()
+        if not file_record:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Get specific version from MinIO
+        file_data = minio_cluster.get_object_version(
+            file_record.object_name,
+            version_id
+        )
+        
+        if not file_data:
+            raise HTTPException(status_code=404, detail="Version not found")
+        
+        # Create streaming response
+        return StreamingResponse(
+            io.BytesIO(file_data),
+            media_type="application/octet-stream",
+            headers={
+                "Content-Disposition": f"attachment; filename={file_record.filename}",
+                "X-Version-ID": version_id
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading version: {str(e)}")
+
+
+@app.delete("/api/files/{file_id}/versions/{version_id}")
+async def delete_file_version(
+    file_id: int,
+    version_id: str,
+    db: Session = Depends(get_db)
+):
+    """Delete a specific version of a file"""
+    try:
+        # Get file metadata
+        file_record = db.query(FileMetadata).filter(FileMetadata.id == file_id).first()
+        if not file_record:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Delete version from all MinIO nodes
+        results = minio_cluster.delete_object_version(
+            file_record.object_name,
+            version_id
+        )
+        
+        return {
+            "message": "Version deleted",
+            "file_id": file_id,
+            "version_id": version_id,
+            "results": results
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting version: {str(e)}")
 
 
 if __name__ == "__main__":
