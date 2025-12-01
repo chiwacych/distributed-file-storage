@@ -64,7 +64,81 @@ services:
     networks:
       - dfs-network
 
-  # PostgreSQL Database
+  # PostgreSQL Primary Database
+  postgres-primary:
+    image: postgres:15-alpine
+    container_name: postgres-primary
+    environment:
+      POSTGRES_USER: dfsuser
+      POSTGRES_PASSWORD: dfspassword
+      POSTGRES_DB: dfs_metadata
+    volumes:
+      - postgres-primary-data:/var/lib/postgresql/data
+      - ./postgres-config/primary-init.sh:/docker-entrypoint-initdb.d/primary-init.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dfsuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dfs-network
+    restart: unless-stopped
+
+  # PostgreSQL Replica 1
+  postgres-replica1:
+    image: postgres:15-alpine
+    container_name: postgres-replica1
+    environment:
+      POSTGRES_USER: dfsuser
+      POSTGRES_PASSWORD: dfspassword
+      POSTGRES_DB: dfs_metadata
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres-replica1-data:/var/lib/postgresql/data
+      - ./postgres-config/replica-init.sh:/docker-entrypoint-initdb.d/replica-init.sh
+    ports:
+      - "5433:5432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dfsuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dfs-network
+    restart: unless-stopped
+
+  # PostgreSQL Replica 2
+  postgres-replica2:
+    image: postgres:15-alpine
+    container_name: postgres-replica2
+    environment:
+      POSTGRES_USER: dfsuser
+      POSTGRES_PASSWORD: dfspassword
+      POSTGRES_DB: dfs_metadata
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres-replica2-data:/var/lib/postgresql/data
+      - ./postgres-config/replica-init.sh:/docker-entrypoint-initdb.d/replica-init.sh
+    ports:
+      - "5434:5432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dfsuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dfs-network
+    restart: unless-stopped
+
+  # Legacy postgres alias (points to primary for backward compatibility)
   postgres:
     image: postgres:15-alpine
     container_name: postgres-dfs
@@ -75,7 +149,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5435:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dfsuser"]
       interval: 10s
@@ -106,7 +180,9 @@ services:
     build: ./app
     container_name: fastapi-dfs
     environment:
-      - DATABASE_URL=postgresql://dfsuser:dfspassword@postgres:5432/dfs_metadata
+      - DATABASE_URL=postgresql://dfsuser:dfspassword@postgres-primary:5432/dfs_metadata
+      - DATABASE_REPLICA1_URL=postgresql://dfsuser:dfspassword@postgres-replica1:5432/dfs_metadata
+      - DATABASE_REPLICA2_URL=postgresql://dfsuser:dfspassword@postgres-replica2:5432/dfs_metadata
       - REDIS_URL=redis://redis:6379
       - MINIO1_ENDPOINT=minio1:9000
       - MINIO2_ENDPOINT=minio2:9000
@@ -116,7 +192,11 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
+      postgres-primary:
+        condition: service_healthy
+      postgres-replica1:
+        condition: service_healthy
+      postgres-replica2:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -189,11 +269,12 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: postgres-exporter
     environment:
-      - DATA_SOURCE_NAME=postgresql://dfsuser:dfspassword@postgres:5432/dfs_metadata?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://dfsuser:dfspassword@postgres-primary:5432/dfs_metadata?sslmode=disable
     ports:
       - "9187:9187"
     depends_on:
-      - postgres
+      postgres-primary:
+        condition: service_healthy
     networks:
       - dfs-network
     restart: unless-stopped
@@ -206,6 +287,9 @@ volumes:
   minio1-data:
   minio2-data:
   minio3-data:
+  postgres-primary-data:
+  postgres-replica1-data:
+  postgres-replica2-data:
   postgres-data:
   redis-data:
   prometheus-data:
