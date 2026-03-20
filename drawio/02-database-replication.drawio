@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-12-01T00:00:00.000Z" agent="5.0" version="22.1.0">
+  <diagram name="Database Replication" id="db-replication">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="PostgreSQL Streaming Replication Architecture (v1.3.0)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="30" width="800" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Primary Database -->
+        <mxCell id="primary" value="&lt;b&gt;PostgreSQL Primary&lt;/b&gt;&#xa;postgres-primary:5432&#xa;&#xa;✓ Write Operations&#xa;✓ Read Operations&#xa;✓ WAL Generation&#xa;✓ Streaming to Replicas&#xa;&#xa;Config:&#xa;max_wal_senders = 10&#xa;wal_level = replica&#xa;hot_standby = on" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=center;fontSize=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="550" y="150" width="300" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Replica 1 -->
+        <mxCell id="replica1" value="&lt;b&gt;PostgreSQL Replica 1&lt;/b&gt;&#xa;postgres-replica1:5433&#xa;&#xa;✓ Read-Only Operations&#xa;✓ Hot Standby Mode&#xa;✓ WAL Receiver Active&#xa;✓ Promotion Ready&#xa;&#xa;Status:&#xa;Recovery Mode: TRUE&#xa;Replication Lag: &lt; 1s&#xa;State: STREAMING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;fontSize=11;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="480" width="280" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Replica 2 -->
+        <mxCell id="replica2" value="&lt;b&gt;PostgreSQL Replica 2&lt;/b&gt;&#xa;postgres-replica2:5434&#xa;&#xa;✓ Read-Only Operations&#xa;✓ Hot Standby Mode&#xa;✓ WAL Receiver Active&#xa;✓ Promotion Ready&#xa;&#xa;Status:&#xa;Recovery Mode: TRUE&#xa;Replication Lag: &lt; 1s&#xa;State: STREAMING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;fontSize=11;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="480" width="280" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- WAL Streaming Arrows -->
+        <mxCell id="wal-to-replica1" value="WAL Streaming&#xa;(Asynchronous)&#xa;Port 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=4;strokeColor=#9673a6;fontSize=12;fontStyle=1" edge="1" parent="1" source="primary" target="replica1">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="wal-to-replica2" value="WAL Streaming&#xa;(Asynchronous)&#xa;Port 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=4;strokeColor=#9673a6;fontSize=12;fontStyle=1" edge="1" parent="1" source="primary" target="replica2">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- FastAPI Read Connection -->
+        <mxCell id="fastapi-read" value="&lt;b&gt;FastAPI Application&lt;/b&gt;&#xa;get_read_db()&#xa;&#xa;Read Operations&#xa;Load Balancing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="800" width="200" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="read-arrow1" value="SELECT Queries&#xa;(Load Balanced)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#6c8ebf;dashed=1;fontSize=11;fontStyle=1" edge="1" parent="1" source="fastapi-read" target="replica1">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="read-arrow2" value="SELECT Queries&#xa;(Load Balanced)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#6c8ebf;dashed=1;fontSize=11;fontStyle=1" edge="1" parent="1" source="fastapi-read" target="replica2">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="read-label" value="🔄 Random Load Balancing Algorithm" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="840" width="320" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- FastAPI Write Connection -->
+        <mxCell id="fastapi-write" value="&lt;b&gt;FastAPI Application&lt;/b&gt;&#xa;get_write_db()&#xa;&#xa;Write Operations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="800" width="200" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="write-arrow" value="INSERT/UPDATE/DELETE&#xa;(Primary Only)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#d6b656;fontSize=11;fontStyle=1" edge="1" parent="1" source="fastapi-write" target="replica2">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1180" y="750" />
+              <mxPoint x="850" y="750" />
+              <mxPoint x="850" y="400" />
+              <mxPoint x="700" y="400" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Metrics Box -->
+        <mxCell id="metrics" value="&lt;b&gt;📊 Replication Metrics&lt;/b&gt;&#xa;&#xa;• Type: Asynchronous Streaming&#xa;• Lag: &lt; 1 second typical&#xa;• RTO: 30 seconds (manual failover)&#xa;• RPO: &lt; 1 second (data loss)&#xa;• Active Replicas: 2&#xa;• State: STREAMING&#xa;• WAL Senders: 2/10 used&#xa;• Protocol: Physical Replication&#xa;&#xa;Monitoring Commands:&#xa;SELECT * FROM pg_stat_replication;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;verticalAlign=top;spacingLeft=10;fontSize=11;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="970" width="380" height="100" as="geometry" />
+        </mxCell>
+        
+        <!-- Failover Note -->
+        <mxCell id="failover" value="&lt;b&gt;⚠️ Failover Process&lt;/b&gt;&#xa;&#xa;&lt;b&gt;Steps:&lt;/b&gt;&#xa;1. Primary database fails&#xa;2. Promote replica to primary:&#xa;   pg_ctl promote -D /data&#xa;3. Update app DATABASE_URL&#xa;4. Restart FastAPI application&#xa;5. Verify write operations&#xa;&#xa;&lt;b&gt;Metrics:&lt;/b&gt;&#xa;• Write Downtime: ~30 seconds&#xa;• Read Availability: 100%&#xa;• Potential Data Loss: &lt; 1s&#xa;• Recovery Point: Last WAL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;verticalAlign=top;spacingLeft=10;fontSize=11;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="800" width="380" height="270" as="geometry" />
+        </mxCell>
+        
+        <!-- Replication Flow Labels -->
+        <mxCell id="flow-label1" value="Continuous WAL Streaming" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="320" y="400" width="160" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="flow-label2" value="Continuous WAL Streaming" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="920" y="400" width="160" height="20" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

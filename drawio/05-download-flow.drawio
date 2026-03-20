@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-12-01T00:00:00.000Z" agent="5.0" version="22.1.0">
+  <diagram name="Download Flow" id="download-flow">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="File Download Flow with Read Replicas &amp; Caching (v1.3.0)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="30" width="1200" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Client -->
+        <mxCell id="client" value="&lt;b&gt;Client&lt;/b&gt;&#xa;Web Browser / API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- FastAPI -->
+        <mxCell id="fastapi" value="&lt;b&gt;FastAPI&lt;/b&gt;&#xa;Application Server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="260" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Redis Cache -->
+        <mxCell id="redis" value="&lt;b&gt;Redis&lt;/b&gt;&#xa;Cache Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="480" y="100" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- PostgreSQL Replicas -->
+        <mxCell id="pg-replicas" value="&lt;b&gt;PostgreSQL Replicas&lt;/b&gt;&#xa;Read Load Balancing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="700" y="100" width="180" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- MinIO Cluster -->
+        <mxCell id="minio" value="&lt;b&gt;MinIO Cluster&lt;/b&gt;&#xa;Object Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e7d4;strokeColor=#82b366;fontSize=12;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="960" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 1 -->
+        <mxCell id="step1" value="1. GET /files/{file_id}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#6c8ebf;fontSize=11;" edge="1" parent="1" source="client" target="fastapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 2: Cache Check -->
+        <mxCell id="step2" value="2. Check cache&#xa;GET file:{id}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#b85450;fontSize=11;" edge="1" parent="1" source="fastapi" target="redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Redis Decision -->
+        <mxCell id="redis-decision" value="&lt;b&gt;Cache Hit?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="490" y="220" width="120" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="redis-check" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#b85450;dashed=1" edge="1" parent="1" source="redis" target="redis-decision">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Cache Hit Path -->
+        <mxCell id="cache-hit" value="YES&#xa;(Fast Path)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;strokeWidth=3;strokeColor=#82b366;fontSize=11;fontStyle=1" edge="1" parent="1" source="redis-decision">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="cache-data" value="&lt;b&gt;Cached Metadata&lt;/b&gt;&#xa;&#xa;• filename&#xa;• object_key&#xa;• version_id&#xa;• file_size&#xa;• content_type&#xa;&#xa;Skip database query!" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="240" y="210" width="140" height="130" as="geometry" />
+        </mxCell>
+        
+        <!-- Cache Miss Path -->
+        <mxCell id="cache-miss" value="NO&#xa;(Database Query)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#d79b00;fontSize=11;fontStyle=1" edge="1" parent="1" source="redis-decision" target="pg-replicas">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="260" />
+              <mxPoint x="650" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Replica Selection -->
+        <mxCell id="replica-selection" value="&lt;b&gt;get_read_db()&lt;/b&gt;&#xa;Random Load Balancing&#xa;&#xa;SELECT * FROM file_metadata&#xa;WHERE id = {file_id}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="680" y="200" width="220" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="replica-arrow" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#82b366;dashed=1" edge="1" parent="1" source="pg-replicas" target="replica-selection">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Replica Options -->
+        <mxCell id="replica1" value="Replica 1&#xa;:5433" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="330" width="80" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="replica2" value="Replica 2&#xa;:5434" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="330" width="80" height="60" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="replica1-line" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#82b366;dashed=1" edge="1" parent="1" source="replica-selection" target="replica1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="replica2-line" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#82b366;dashed=1" edge="1" parent="1" source="replica-selection" target="replica2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="or-label" value="OR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="760" y="315" width="40" height="20" as="geometry" />
+        </mxCell>
+        
+        <!-- Metadata Retrieved -->
+        <mxCell id="metadata-box" value="&lt;b&gt;Metadata Retrieved&lt;/b&gt;&#xa;&#xa;{&#xa;  &quot;id&quot;: 1,&#xa;  &quot;filename&quot;: &quot;version_test.txt&quot;,&#xa;  &quot;object_key&quot;: &quot;abc123...&quot;,&#xa;  &quot;version_id&quot;: &quot;v1-xyz&quot;,&#xa;  &quot;file_size&quot;: 36,&#xa;  &quot;content_type&quot;: &quot;text/plain&quot;&#xa;}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=10;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="680" y="420" width="220" height="150" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="metadata-arrow" value="Query result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="replica2" target="metadata-box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 3: Fetch from MinIO -->
+        <mxCell id="step3" value="3. GET object&#xa;(object_key, version_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#82b366;fontSize=11;" edge="1" parent="1" target="minio">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="790" y="180" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="790" y="180" />
+              <mxPoint x="920" y="180" />
+              <mxPoint x="920" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- MinIO Processing -->
+        <mxCell id="minio-process" value="&lt;b&gt;MinIO Retrieval&lt;/b&gt;&#xa;&#xa;• Locate object by key&#xa;• Fetch specific version&#xa;• Stream file data&#xa;• Return binary content&#xa;&#xa;Cluster: 3 nodes&#xa;Automatic load balancing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e7d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="200" width="200" height="160" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="minio-arrow" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#82b366;dashed=1" edge="1" parent="1" source="minio" target="minio-process">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 4: Stream to Client -->
+        <mxCell id="step4" value="4. Stream file to FastAPI" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;strokeWidth=2;strokeColor=#82b366;fontSize=11;" edge="1" parent="1" source="minio-process">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="320" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="920" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- FastAPI Response -->
+        <mxCell id="fastapi-response" value="&lt;b&gt;FastAPI Response&lt;/b&gt;&#xa;&#xa;Headers:&#xa;• Content-Type&#xa;• Content-Length&#xa;• Content-Disposition&#xa;&#xa;Body:&#xa;• Binary file data&#xa;• Streamed chunks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="240" y="380" width="160" height="150" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 5: Client Download -->
+        <mxCell id="step5" value="5. Download complete" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" edge="1" parent="1" source="fastapi-response" target="client">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="455" />
+              <mxPoint x="200" y="145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Performance Metrics -->
+        <mxCell id="metrics" value="&lt;b&gt;Performance Benefits:&lt;/b&gt;&#xa;&#xa;✓ Cache Hit: ~10ms response&#xa;✓ Cache Miss: ~50ms response&#xa;✓ Read Replicas: 2x throughput&#xa;✓ Load balancing: Even distribution&#xa;✓ MinIO Cluster: Parallel reads&#xa;&#xa;&lt;b&gt;High Availability:&lt;/b&gt;&#xa;✓ Replica failover automatic&#xa;✓ MinIO node failure tolerant&#xa;✓ Zero read downtime" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="180" height="240" as="geometry" />
+        </mxCell>
+        
+        <!-- Version Download -->
+        <mxCell id="version-download" value="&lt;b&gt;Specific Version Download:&lt;/b&gt;&#xa;&#xa;GET /files/{file_id}/versions/{version_id}&#xa;&#xa;• Same flow as above&#xa;• Uses version_id instead of latest&#xa;• All versions accessible&#xa;• No performance penalty&#xa;&#xa;&lt;b&gt;Example:&lt;/b&gt;&#xa;GET /files/1/versions/v1-abc123&#xa;  → Returns old version&#xa;&#xa;GET /files/1&#xa;  → Returns latest version" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="280" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Database Details -->
+        <mxCell id="db-details" value="&lt;b&gt;Database Query (Cache Miss):&lt;/b&gt;&#xa;&#xa;1. get_read_db() selects replica&#xa;2. Random choice: [Replica1, Replica2]&#xa;3. Execute SELECT query&#xa;4. Return metadata&#xa;5. Update Redis cache (TTL: 1hr)&#xa;&#xa;&lt;b&gt;Failover Behavior:&lt;/b&gt;&#xa;If replica unavailable:&#xa;  → Automatic fallback to primary&#xa;  → No interruption to service&#xa;  → Logged for monitoring" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="580" width="280" height="210" as="geometry" />
+        </mxCell>
+        
+        <!-- Flow Summary -->
+        <mxCell id="summary" value="&lt;b&gt;Download Flow Summary:&lt;/b&gt;&#xa;&#xa;1. Client requests file&#xa;2. Check Redis cache first&#xa;3. If miss, query read replica&#xa;4. Load balance between replicas&#xa;5. Fetch object from MinIO&#xa;6. Stream to client&#xa;7. Update cache for next request&#xa;&#xa;&lt;b&gt;Optimization:&lt;/b&gt;&#xa;• Cache reduces DB load by 80%+&#xa;• Replicas double read capacity&#xa;• Streaming reduces memory usage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=10;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="680" y="600" width="260" height="220" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

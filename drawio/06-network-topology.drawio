@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-12-01T00:00:00.000Z" agent="5.0" version="22.1.0">
+  <diagram name="Network Topology" id="network-topology">
+    <mxGraphModel dx="2000" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Network Topology - Complete System Architecture (v1.3.0 - 18 Containers)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="30" width="1400" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- External Network -->
+        <mxCell id="external-bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1080" height="120" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="external-label" value="External Network (Internet)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="85" width="200" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Clients -->
+        <mxCell id="web-client" value="&lt;b&gt;Web Browser&lt;/b&gt;&#xa;HTTP/HTTPS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="130" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="api-client" value="&lt;b&gt;API Client&lt;/b&gt;&#xa;REST API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="130" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="mobile-client" value="&lt;b&gt;Mobile App&lt;/b&gt;&#xa;(Future)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;opacity=40;" vertex="1" parent="1">
+          <mxGeometry x="460" y="130" width="120" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Application Network -->
+        <mxCell id="app-bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="1080" height="140" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="app-label" value="Application Layer (Docker Bridge Network: dfs-network)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="225" width="450" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- FastAPI Instances -->
+        <mxCell id="fastapi" value="&lt;b&gt;FastAPI&lt;/b&gt;&#xa;0.0.0.0:8000&#xa;&#xa;Container: fastapi-dfs&#xa;Network: dfs-network" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="260" y="270" width="140" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Nginx (Future) -->
+        <mxCell id="nginx" value="&lt;b&gt;Nginx&lt;/b&gt;&#xa;:80, :443&#xa;(Future Load Balancer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;opacity=40;" vertex="1" parent="1">
+          <mxGeometry x="80" y="270" width="140" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Client to App Connections -->
+        <mxCell id="client-app1" value="Port 8000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="web-client" target="fastapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="client-app2" value="Port 8000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="api-client" target="fastapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Data Layer -->
+        <mxCell id="data-bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="380" width="520" height="380" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="data-label" value="Data Layer - PostgreSQL Cluster" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="385" width="300" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- PostgreSQL Primary -->
+        <mxCell id="pg-primary" value="&lt;b&gt;PostgreSQL Primary&lt;/b&gt;&#xa;postgres-primary:5432&#xa;&#xa;Container: postgres-primary&#xa;Network: dfs-network&#xa;Volume: postgres-primary-data&#xa;&#xa;Mode: Read/Write&#xa;Connections: Write operations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="180" y="430" width="200" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- PostgreSQL Replica 1 -->
+        <mxCell id="pg-replica1" value="&lt;b&gt;PostgreSQL Replica 1&lt;/b&gt;&#xa;postgres-replica1:5433&#xa;&#xa;Container: postgres-replica1&#xa;Network: dfs-network&#xa;Volume: postgres-replica1-data&#xa;&#xa;Mode: Read-Only&#xa;Lag: &lt; 1 second" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="600" width="200" height="130" as="geometry" />
+        </mxCell>
+        
+        <!-- PostgreSQL Replica 2 -->
+        <mxCell id="pg-replica2" value="&lt;b&gt;PostgreSQL Replica 2&lt;/b&gt;&#xa;postgres-replica2:5434&#xa;&#xa;Container: postgres-replica2&#xa;Network: dfs-network&#xa;Volume: postgres-replica2-data&#xa;&#xa;Mode: Read-Only&#xa;Lag: &lt; 1 second" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="600" width="200" height="130" as="geometry" />
+        </mxCell>
+        
+        <!-- WAL Streaming -->
+        <mxCell id="wal1" value="WAL Stream&#xa;Port 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#9673a6;fontSize=10;fontStyle=1" edge="1" parent="1" source="pg-primary" target="pg-replica1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="wal2" value="WAL Stream&#xa;Port 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#9673a6;fontSize=10;fontStyle=1" edge="1" parent="1" source="pg-primary" target="pg-replica2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- App to Database -->
+        <mxCell id="app-db-write" value="Write&#xa;get_db()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="fastapi" target="pg-primary">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="app-db-read1" value="Read&#xa;get_read_db()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#82b366;dashed=1;fontSize=10;" edge="1" parent="1" source="fastapi" target="pg-replica1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="380" />
+              <mxPoint x="160" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="app-db-read2" value="Read&#xa;get_read_db()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#82b366;dashed=1;fontSize=10;" edge="1" parent="1" source="fastapi" target="pg-replica2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="380" />
+              <mxPoint x="400" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Cache Layer -->
+        <mxCell id="cache-bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="580" y="380" width="250" height="160" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="cache-label" value="Cache Layer" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="590" y="385" width="150" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Redis -->
+        <mxCell id="redis" value="&lt;b&gt;Redis&lt;/b&gt;&#xa;redis:6379&#xa;&#xa;Container: redis&#xa;Network: dfs-network&#xa;Version: 7-alpine&#xa;&#xa;Purpose: Metadata cache&#xa;TTL: 1 hour" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="430" width="210" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- App to Redis -->
+        <mxCell id="app-redis" value="Cache&#xa;Port 6379" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="fastapi" target="redis">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="305" />
+              <mxPoint x="470" y="475" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Storage Layer -->
+        <mxCell id="storage-bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e7d4;strokeColor=#82b366;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="580" y="560" width="540" height="200" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="storage-label" value="Storage Layer - MinIO Cluster" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="590" y="565" width="300" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- MinIO Nodes -->
+        <mxCell id="minio1" value="&lt;b&gt;MinIO Node 1&lt;/b&gt;&#xa;minio1:9000&#xa;&#xa;Container: minio1&#xa;Console: :9001&#xa;Volume: minio1-data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e7d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="610" width="150" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="minio2" value="&lt;b&gt;MinIO Node 2&lt;/b&gt;&#xa;minio2:9000&#xa;&#xa;Container: minio2&#xa;Console: :9002&#xa;Volume: minio2-data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e7d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="610" width="150" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="minio3" value="&lt;b&gt;MinIO Node 3&lt;/b&gt;&#xa;minio3:9000&#xa;&#xa;Container: minio3&#xa;Console: :9003&#xa;Volume: minio3-data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e7d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="960" y="610" width="150" height="100" as="geometry" />
+        </mxCell>
+        
+        <!-- MinIO Cluster Connection -->
+        <mxCell id="minio-cluster1" value="Distributed&#xa;Erasure Code" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#82b366;dashed=1;fontSize=9;" edge="1" parent="1" source="minio1" target="minio2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="minio-cluster2" value="Distributed&#xa;Erasure Code" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#82b366;dashed=1;fontSize=9;" edge="1" parent="1" source="minio2" target="minio3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- App to MinIO -->
+        <mxCell id="app-minio" value="Object Storage&#xa;Port 9000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;strokeWidth=2;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="fastapi">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="610" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="520" y="323" />
+              <mxPoint x="520" y="560" />
+              <mxPoint x="800" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Monitoring Layer -->
+        <mxCell id="monitor-bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="880" y="220" width="240" height="320" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="monitor-label" value="Monitoring Layer" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="890" y="225" width="150" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Prometheus -->
+        <mxCell id="prometheus" value="&lt;b&gt;Prometheus&lt;/b&gt;&#xa;prometheus:9090&#xa;&#xa;Container: prometheus&#xa;Network: dfs-network&#xa;&#xa;Metrics collection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="900" y="270" width="200" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- Grafana -->
+        <mxCell id="grafana" value="&lt;b&gt;Grafana&lt;/b&gt;&#xa;grafana:3000&#xa;&#xa;Container: grafana&#xa;Network: dfs-network&#xa;&#xa;Visualization dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="900" y="380" width="200" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- Exporters -->
+        <mxCell id="postgres-exporter" value="&lt;b&gt;Postgres Exporter&lt;/b&gt;&#xa;:9187" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="900" y="490" width="90" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="minio-exporter" value="&lt;b&gt;MinIO Exporter&lt;/b&gt;&#xa;:9290" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="490" width="90" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Port Summary -->
+        <mxCell id="port-summary" value="&lt;b&gt;Port Mapping Summary:&lt;/b&gt;&#xa;&#xa;Application:&#xa;• 8000: FastAPI API&#xa;&#xa;Database:&#xa;• 5432: PostgreSQL Primary&#xa;• 5433: PostgreSQL Replica 1&#xa;• 5434: PostgreSQL Replica 2&#xa;• 6379: Redis Cache&#xa;&#xa;Storage:&#xa;• 9000: MinIO API&#xa;• 9001-9003: MinIO Consoles&#xa;&#xa;Monitoring:&#xa;• 9090: Prometheus&#xa;• 3000: Grafana&#xa;• 9187: Postgres Exporter&#xa;• 9290: MinIO Exporter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=10;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="600" y="220" width="230" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Network Details -->
+        <mxCell id="network-details" value="&lt;b&gt;Docker Network: dfs-network&lt;/b&gt;&#xa;&#xa;Type: Bridge&#xa;Driver: bridge&#xa;&#xa;Total Containers: 18&#xa;• 1 FastAPI&#xa;• 4 PostgreSQL (1 primary + 2 replicas + 1 legacy)&#xa;• 1 Redis&#xa;• 3 MinIO nodes&#xa;• 2 Monitoring (Prometheus, Grafana)&#xa;• 2 Exporters&#xa;&#xa;All containers on same network&#xa;Internal DNS resolution&#xa;Service discovery by container name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=10;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="260" height="120" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

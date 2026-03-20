@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-12-01T00:00:00.000Z" agent="5.0" version="22.1.0">
+  <diagram name="Upload Flow" id="upload-flow">
+    <mxGraphModel dx="1800" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="File Upload Flow with Versioning (v1.3.0 - MinIO + PostgreSQL HA)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="1000" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- ==================== ROW 1: Service Components ==================== -->
+        
+        <!-- Client -->
+        <mxCell id="client" value="&lt;b&gt;📱 Client&lt;/b&gt;&#xa;Web Browser / API&#xa;&#xa;User Action:&#xa;Upload File" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=0;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="140" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- FastAPI -->
+        <mxCell id="fastapi" value="&lt;b&gt;⚡ FastAPI&lt;/b&gt;&#xa;Application Server&#xa;Port: 8000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=0;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="240" y="80" width="140" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- PostgreSQL Primary -->
+        <mxCell id="postgres" value="&lt;b&gt;🗄️ PostgreSQL&lt;/b&gt;&#xa;Primary :5432&#xa;Metadata Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=0;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="440" y="80" width="140" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- MinIO Cluster -->
+        <mxCell id="minio" value="&lt;b&gt;☁️ MinIO Cluster&lt;/b&gt;&#xa;Object Storage&#xa;3 Nodes, Versioning ON" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=0;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="640" y="80" width="160" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- Redis Cache -->
+        <mxCell id="redis" value="&lt;b&gt;🔴 Redis&lt;/b&gt;&#xa;Cache Layer&#xa;TTL: 1 hour" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=0;align=center;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="80" width="140" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- ==================== ROW 2: Processing Steps ==================== -->
+        
+        <!-- Step 1 Arrow -->
+        <mxCell id="step1" value="1️⃣ POST /upload" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" edge="1" parent="1" source="client" target="fastapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Process Box 1: FastAPI Processing -->
+        <mxCell id="process1" value="&lt;b&gt;⚙️ Step 2: FastAPI Processing&lt;/b&gt;&#xa;&#xa;1. Validate file (size, type)&#xa;2. Generate unique object_key&#xa;3. Calculate SHA-256 checksum&#xa;4. Prepare metadata&#xa;5. Begin transaction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="220" height="140" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="process1-arrow" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#d6b656;dashed=1" edge="1" parent="1" source="fastapi" target="process1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Process Box 2: MinIO Upload -->
+        <mxCell id="minio-process" value="&lt;b&gt;☁️ Step 3: MinIO Storage&lt;/b&gt;&#xa;&#xa;1. PUT object to bucket&#xa;2. Generate version_id (UUID)&#xa;3. Set is_latest = TRUE&#xa;4. Compute ETag (MD5)&#xa;5. Replicate across 3 nodes&#xa;6. Return version metadata" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="300" y="220" width="220" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 2 Arrow: To MinIO -->
+        <mxCell id="step2" value="3️⃣ PUT object" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#82b366;fontSize=11;fontStyle=1" edge="1" parent="1" source="process1" target="minio-process">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Process Box 3: PostgreSQL -->
+        <mxCell id="db-process" value="&lt;b&gt;🗄️ Step 4: Save Metadata&lt;/b&gt;&#xa;&#xa;1. INSERT INTO file_metadata&#xa;2. Store: filename, size, type&#xa;3. Store: object_key, version_id&#xa;4. Store: checksum, timestamp&#xa;5. COMMIT transaction&#xa;6. WAL replicate to replicas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="560" y="220" width="220" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 3 Arrow: To PostgreSQL -->
+        <mxCell id="step3" value="4️⃣ INSERT" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#9673a6;fontSize=11;fontStyle=1" edge="1" parent="1" source="minio-process" target="db-process">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Process Box 4: Redis Cache -->
+        <mxCell id="redis-process" value="&lt;b&gt;🔴 Step 5: Update Cache&lt;/b&gt;&#xa;&#xa;1. Invalidate old cache&#xa;2. SET file:{id} metadata&#xa;3. SET TTL = 1 hour&#xa;&#xa;Cached: filename, size,&#xa;object_key, version_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="820" y="220" width="200" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Step 4 Arrow: To Redis -->
+        <mxCell id="step5" value="5️⃣ Cache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;strokeColor=#b85450;fontSize=11;fontStyle=1" edge="1" parent="1" source="db-process" target="redis-process">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- ==================== ROW 3: Response ==================== -->
+        
+        <!-- Response Box -->
+        <mxCell id="response" value="&lt;b&gt;📤 Step 6: Response to Client&lt;/b&gt;&#xa;&#xa;{&#xa;  &quot;file_id&quot;: 35,&#xa;  &quot;filename&quot;: &quot;document.pdf&quot;,&#xa;  &quot;version_id&quot;: &quot;abc123-uuid&quot;,&#xa;  &quot;file_size&quot;: 1024000,&#xa;  &quot;checksum&quot;: &quot;sha256...&quot;,&#xa;  &quot;upload_time&quot;: &quot;2025-12-09T10:30:00Z&quot;,&#xa;  &quot;status&quot;: &quot;success&quot;&#xa;}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="40" y="410" width="260" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- Return Arrow -->
+        <mxCell id="return-arrow" value="6️⃣ JSON Response" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="process1" target="response">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="360" />
+              <mxPoint x="20" y="390" />
+              <mxPoint x="170" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ==================== Info Boxes ==================== -->
+        
+        <!-- Versioning Example -->
+        <mxCell id="version-example" value="&lt;b&gt;📁 Versioning Example:&lt;/b&gt;&#xa;&#xa;Upload 1: document.pdf&#xa;  └─ version_id: v1-abc123&#xa;  └─ is_latest: true&#xa;&#xa;Upload 2: document.pdf (update)&#xa;  └─ version_id: v2-def456&#xa;  └─ is_latest: true&#xa;&#xa;Previous version v1-abc123&#xa;  └─ is_latest: false&#xa;  └─ Still accessible!" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="340" y="410" width="240" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- Key Features Box -->
+        <mxCell id="features" value="&lt;b&gt;✨ Key Features:&lt;/b&gt;&#xa;&#xa;✓ Automatic 3-way replication&#xa;✓ SHA-256 checksum verification&#xa;✓ Bucket-level versioning enabled&#xa;✓ Previous versions retained&#xa;✓ ACID transactions for metadata&#xa;✓ WAL streaming to replicas&#xa;✓ Cache invalidation on upload&#xa;&#xa;&lt;b&gt;API Endpoints:&lt;/b&gt;&#xa;• POST /api/upload&#xa;• GET /api/files/{id}/versions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="620" y="410" width="220" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- HA Note -->
+        <mxCell id="ha-note" value="&lt;b&gt;🔄 High Availability:&lt;/b&gt;&#xa;&#xa;&lt;b&gt;PostgreSQL Cluster:&lt;/b&gt;&#xa;• 1 Primary + 2 Read Replicas&#xa;• Streaming replication&#xa;• Lag: &lt; 1 second&#xa;&#xa;&lt;b&gt;MinIO Cluster:&lt;/b&gt;&#xa;• 3-node distribution&#xa;• Automatic failover&#xa;• Erasure coding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=11;spacingTop=8;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="880" y="410" width="200" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- Flow Legend -->
+        <mxCell id="legend" value="&lt;b&gt;Legend:&lt;/b&gt;  ━━━ Request Flow  ┅┅┅ Processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=center;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="300" height="30" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
